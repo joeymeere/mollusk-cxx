@@ -8,13 +8,6 @@
  * All pubkeys are 32 raw bytes.
  * Status returns: 0 = ok, non-zero = error; call mollusk_last_error_copy
  * to read a UTF-8 description of the last error on this thread.
- *
- * Mollusk has no bank. A MolluskHandle runs instructions against the
- * accounts it is given and hands back the resulting accounts without
- * storing them. A MolluskContextHandle adds an account store that
- * successful instructions write back to. Nothing is signed, no fees are
- * charged and there are no blockhashes: signer flags on account metas are
- * taken as given.
  */
 
 #ifndef MOLLUSK_H
@@ -45,8 +38,6 @@ size_t mollusk_last_error_copy(uint8_t *buf, size_t buf_len);
  * library actually linked). Do not free. */
 const uint8_t *mollusk_version(void);
 
-/* ---- plain C data -------------------------------------------------------- */
-
 /* Pointers in these structs are borrowed for the duration of a call. */
 typedef struct {
     const uint8_t *pubkey;
@@ -71,8 +62,6 @@ typedef struct {
     bool executable;
     uint64_t rent_epoch;
 } MolluskKeyedAccount;
-
-/* ---- the harness ---------------------------------------------------------- */
 
 /* Default builtins (System, BPF loaders), no programs. NULL on panic. */
 MolluskHandle *mollusk_new(void);
@@ -121,13 +110,6 @@ int32_t mollusk_get_clock(const MolluskHandle *handle, MolluskClock *out);
 /* Replaces only Clock; mollusk_warp_to_slot moves the sysvars together. */
 int32_t mollusk_set_clock(MolluskHandle *handle, const MolluskClock *clock);
 
-/* ---- processing ------------------------------------------------------------ */
-
-/* Each returns a new result (free with mollusk_result_free) whether the
- * instructions succeed or fail, or NULL on bad arguments / panic. Accounts
- * an instruction references but `accounts` lacks are an error inside the
- * result, except programs, sysvars and builtins, which Mollusk supplies. */
-
 /* One instruction. */
 MolluskResult *mollusk_process_instruction(MolluskHandle *handle,
                                            const MolluskInstruction *ix,
@@ -153,8 +135,6 @@ MolluskResult *mollusk_process_transaction_instructions(
     const MolluskKeyedAccount *accounts,
     size_t accounts_len,
     const uint8_t *payer);
-
-/* ---- context: a harness with an account store ------------------------------ */
 
 /* Takes ownership of `handle` (freed even on failure). */
 MolluskContextHandle *mollusk_context_new(MolluskHandle *handle);
@@ -185,8 +165,6 @@ MolluskAccount *mollusk_context_get_account(MolluskContextHandle *handle,
 /* Create or overwrite a stored account. */
 int32_t mollusk_context_set_account(MolluskContextHandle *handle,
                                     const MolluskKeyedAccount *account);
-
-/* ---- results --------------------------------------------------------------- */
 
 void mollusk_result_free(MolluskResult *handle);
 
@@ -237,8 +215,6 @@ MolluskAccount *mollusk_result_account_at(const MolluskResult *handle,
 MolluskAccount *mollusk_result_get_account(const MolluskResult *handle,
                                            const uint8_t *pubkey);
 
-/* ---- accounts ---------------------------------------------------------------- */
-
 void mollusk_account_free(MolluskAccount *handle);
 uint64_t mollusk_account_lamports(const MolluskAccount *handle);
 int32_t mollusk_account_executable(const MolluskAccount *handle);
@@ -253,8 +229,6 @@ size_t mollusk_account_data_copy(const MolluskAccount *handle,
 int32_t mollusk_account_keyed(const MolluskAccount *handle,
                               const uint8_t *pubkey,
                               MolluskKeyedAccount *out);
-
-/* ---- keys -------------------------------------------------------------------- */
 
 /* Public key for a 32-byte ed25519 secret seed. */
 int32_t mollusk_pubkey_from_seed(const uint8_t *seed32, uint8_t *out32);
