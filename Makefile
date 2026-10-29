@@ -38,6 +38,10 @@ lib:
 	cp $(TARGET_DIR)/libmollusk.a $(LIB)
 	@ls -lh $(LIB) | awk '{print "built", $$9, "(" $$5 ")"}'
 
+$(LIB):
+	@echo "$(LIB) is missing: run 'make lib', or the Refresh libs workflow for every platform" >&2
+	@exit 1
+
 build/smoke: tests/smoke.c include/mollusk.h $(LIB)
 	@mkdir -p build
 	$(CC) -std=c11 -Wall -Wextra -Werror -Iinclude -o $@ $< $(LIB) $(SYS_LIBS)

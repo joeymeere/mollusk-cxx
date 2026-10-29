@@ -2,6 +2,7 @@
 # Move mollusk-cxx onto a new mollusk-svm release
 #
 #   etc/scripts/bump.sh 0.16.5
+
 set -euo pipefail
 
 ver="${1:?usage: bump.sh <mollusk-svm version>}"
