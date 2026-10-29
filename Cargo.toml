@@ -1,0 +1,38 @@
+[package]
+name = "mollusk-cxx"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.98.1"
+description = "C ABI for Mollusk"
+publish = false
+
+[lib]
+name = "mollusk"
+crate-type = ["staticlib", "cdylib"]
+
+[dependencies]
+bincode = "1.3.3"
+mollusk-svm = "=0.16.4"
+mollusk-svm-programs-token = "=0.16.4"
+serde = "1"
+solana-account = "4.3.0"
+solana-clock = "3.0.1"
+solana-instruction = "3.2.0"
+solana-instruction-error = { version = "2.1.0", features = ["serde"] }
+solana-keypair = "3.1"
+solana-logger = "3.0.0"
+solana-program-error = "3.0.0"
+solana-pubkey = { version = "4.1.0", features = ["curve25519"] }
+solana-signer = "3.0"
+solana-svm-log-collector = { version = "4.3.0", features = ["agave-unstable-api"] }
+solana-transaction-error = { version = "3.0.0", features = ["serde"] }
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+strip = "debuginfo"
+panic = "unwind"
+opt-level = "s"
+
+[profile.dev]
+panic = "unwind"

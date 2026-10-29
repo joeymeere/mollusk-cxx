@@ -1,0 +1,94 @@
+name: Refresh libs
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "mollusk-svm version (blank = latest on crates.io)"
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      build: ${{ steps.v.outputs.build }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: v
+        env:
+          WANT: ${{ inputs.version }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          current="$(sed -nE 's/^#define MOLLUSK_UPSTREAM_VERSION "([^"]+)"/\1/p' include/mollusk.h)"
+          latest="$(curl -fsSL -A mollusk-cxx https://crates.io/api/v1/crates/mollusk-svm |
+              python3 -c 'import json,sys; print(json.load(sys.stdin)["crate"]["max_stable_version"])')"
+          version="${WANT:-$latest}"
+          echo "current=$current latest=$latest target=$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [ "$EVENT" = workflow_dispatch ] || [ "$version" != "$current" ]; then
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: check
+    if: needs.check.outputs.build == 'true'
+    name: Build ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - { os: ubuntu-24.04,     platform: linux-x64 }
+          - { os: ubuntu-24.04-arm, platform: linux-arm64 }
+          - { os: macos-15,         platform: darwin-arm64 }
+          - { os: macos-15-intel,   platform: darwin-x64 }
+    steps:
+      - uses: actions/checkout@v5
+      - name: Bump to mollusk-svm ${{ needs.check.outputs.version }}
+        run: etc/scripts/bump.sh "${{ needs.check.outputs.version }}"
+      - run: make lib test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lib-${{ matrix.platform }}
+          path: libs/${{ matrix.platform }}/libmollusk.a
+          if-no-files-found: error
+
+  pr:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+      - run: etc/scripts/bump.sh "${{ needs.check.outputs.version }}"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: lib-*
+          path: artifacts
+      - name: Place archives
+        run: |
+          for d in artifacts/lib-*; do
+            platform="${d#artifacts/lib-}"
+            mkdir -p "libs/$platform"
+            cp "$d/libmollusk.a" "libs/$platform/libmollusk.a"
+          done
+          rm -rf artifacts
+          ls -lh libs/*/libmollusk.a
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          branch: refresh/mollusk-svm-${{ needs.check.outputs.version }}
+          commit-message: "chore: rebuild libs for mollusk-svm ${{ needs.check.outputs.version }}"
+          title: "Rebuild libs for mollusk-svm ${{ needs.check.outputs.version }}"
+          body: |
+            Automated by `refresh.yml`: Cargo.lock seeded from Mollusk's
+            ${{ needs.check.outputs.version }} lockfile, archives rebuilt and
+            smoke-tested on native runners for every platform in `libs/`.
+
+            Bump `MOLLUSK_CXX_VERSION` / `Cargo.toml` and tag after merging
+            if this should ship as a release.
