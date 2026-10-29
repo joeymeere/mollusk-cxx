@@ -9,10 +9,6 @@ A C ABI for [Mollusk](https://github.com/anza-xyz/mollusk)
 | `linux-x64`    | `-lgcc_s -lutil -lrt -lpthread -lm -ldl`           |
 | `linux-arm64`  | `-lgcc_s -lutil -lrt -lpthread -lm -ldl`           |
 
-Mollusk has no bank: you hand it the accounts, it runs the instruction and
-hands back the resulting accounts. `MolluskContextHandle` adds an account
-store for tests that chain state from one instruction to the next.
-
 ## Example
 
 ```c
