@@ -25,7 +25,7 @@ jobs:
           WANT: ${{ inputs.version }}
           EVENT: ${{ github.event_name }}
         run: |
-          current="$(sed -nE 's/^#define MOLLUSK_UPSTREAM_VERSION "([^"]+)"/\1/p' include/mollusk.h)"
+          current="$(sed -nE 's/^#define MOLLUSK_UPSTREAM_VERSION[[:space:]]+"([^"]+)"/\1/p' include/mollusk.h)"
           latest="$(curl -fsSL -A mollusk-cxx https://crates.io/api/v1/crates/mollusk-svm |
               python3 -c 'import json,sys; print(json.load(sys.stdin)["crate"]["max_stable_version"])')"
           version="${WANT:-$latest}"

@@ -17,7 +17,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define MOLLUSK_CXX_VERSION      "0.1.0"
+#define MOLLUSK_CXX_VERSION "0.1.0"
 #define MOLLUSK_UPSTREAM_VERSION "0.16.4"
 
 #ifdef __cplusplus

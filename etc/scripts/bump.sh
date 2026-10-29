@@ -15,7 +15,7 @@ curl -fsSL "$lock_url" -o Cargo.lock.upstream ||
 mv Cargo.lock.upstream Cargo.lock
 
 sed -E -i.bak "s/^(mollusk-svm(-programs-token)? = \")=[^\"]+/\1=${ver}/" Cargo.toml
-sed -E -i.bak "s/^(#define MOLLUSK_UPSTREAM_VERSION )\"[^\"]+\"/\1\"${ver}\"/" \
+sed -E -i.bak "s/^(#define MOLLUSK_UPSTREAM_VERSION[[:space:]]+)\"[^\"]+\"/\1\"${ver}\"/" \
     include/mollusk.h
 rm -f Cargo.toml.bak include/mollusk.h.bak
 

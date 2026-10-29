@@ -16,7 +16,7 @@ jobs:
         run: |
           tag="${GITHUB_REF_NAME#v}"
           crate="$(sed -nE 's/^version = "([^"]+)"/\1/p' Cargo.toml | head -1)"
-          header="$(sed -nE 's/^#define MOLLUSK_CXX_VERSION "([^"]+)"/\1/p' include/mollusk.h)"
+          header="$(sed -nE 's/^#define MOLLUSK_CXX_VERSION[[:space:]]+"([^"]+)"/\1/p' include/mollusk.h)"
           echo "tag=$tag Cargo.toml=$crate header=$header"
           [ "$tag" = "$crate" ] && [ "$tag" = "$header" ]
 
